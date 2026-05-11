@@ -387,7 +387,7 @@ const BetaForm = () => {
           <p className="text-sm text-zinc-400 leading-relaxed">
             We're looking for Python developers willing to run{' '}
             <code className="font-mono text-zinc-300 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800 text-xs">
-              shield scan
+              velonus scan
             </code>{' '}
             against their codebase, tell us what we miss, and shape the AI layer before it ships.
           </p>
