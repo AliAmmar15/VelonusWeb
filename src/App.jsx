@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 import {
   Terminal,
   Check,
@@ -332,13 +333,44 @@ const Manifesto = () => (
 );
 
 /* ─── Beta Form ──────────────────────────────────────────────────────────────── */
+const EMAILJS_SERVICE  = 'service_2iucag7';
+const EMAILJS_NOTIFY   = 'template_h6hxhj4';  // velonus_notify  → sends to you
+const EMAILJS_CONFIRM  = 'template_3a18ru8';  // velonus_confirm → sends to them
+const EMAILJS_KEY      = 'znd0sXMqnDHGUmi_q';
+
 const BetaForm = () => {
   const [status, setStatus] = useState('idle');
+  const [error, setError]   = useState('');
+  const [fields, setFields] = useState({
+    from_name: '',
+    from_email: '',
+    github_url: '',
+    project_type: '',
+  });
 
-  const handleSubmit = (e) => {
+  const set = (key) => (e) => setFields((f) => ({ ...f, [key]: e.target.value }));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus('submitting');
-    setTimeout(() => setStatus('success'), 900);
+    setError('');
+
+    const params = {
+      from_name:    fields.from_name,
+      from_email:   fields.from_email,
+      github_url:   fields.github_url  || '—',
+      project_type: fields.project_type || '—',
+    };
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_NOTIFY,  params, EMAILJS_KEY);
+      await emailjs.send(EMAILJS_SERVICE, EMAILJS_CONFIRM, params, EMAILJS_KEY);
+      setStatus('success');
+    } catch (err) {
+      console.error('EmailJS error', err);
+      setError('Something went wrong — please try again or email us directly.');
+      setStatus('idle');
+    }
   };
 
   return (
@@ -381,6 +413,8 @@ const BetaForm = () => {
                 <input
                   required
                   type="text"
+                  value={fields.from_name}
+                  onChange={set('from_name')}
                   className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                   placeholder="Jane Doe"
                 />
@@ -392,6 +426,8 @@ const BetaForm = () => {
                 <input
                   required
                   type="email"
+                  value={fields.from_email}
+                  onChange={set('from_email')}
                   className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                   placeholder="jane@example.com"
                 />
@@ -405,6 +441,8 @@ const BetaForm = () => {
               </label>
               <input
                 type="url"
+                value={fields.github_url}
+                onChange={set('github_url')}
                 className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                 placeholder="https://github.com/janedoe"
               />
@@ -417,10 +455,16 @@ const BetaForm = () => {
               </label>
               <input
                 type="text"
+                value={fields.project_type}
+                onChange={set('project_type')}
                 className="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-all"
                 placeholder="FastAPI backend, LangChain app, Django monolith..."
               />
             </div>
+
+            {error && (
+              <p className="text-xs text-red-400">{error}</p>
+            )}
 
             <button
               type="submit"
